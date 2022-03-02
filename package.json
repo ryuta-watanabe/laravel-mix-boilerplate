@@ -1,0 +1,49 @@
+{
+	"name": "laravel-mix-development",
+	"version": "1.0.0",
+	"main": "index.js",
+	"license": "MIT",
+	"scripts": {
+		"imagemin": "node imagemin.js",
+		"clean:dev": "npx rimraf ./dist",
+		"clean:build": "npx rimraf ./prod",
+		"clean:manifest": "npx rimraf ./prod/mix-manifest.json",
+		"dev": "npm run clean:dev && mix",
+		"dev:watch": "npm run clean:dev && mix watch",
+		"dev:watch-poll": "npm run clean:dev && mix watch -- --watch-options-poll=1000",
+		"hot": "npm run clean:dev && mix watch --hot",
+		"build": "npm run clean:build && npm run imagemin && mix --production && npm run clean:manifest"
+	},
+	"devDependencies": {
+		"browser-sync": "^2.26.14",
+		"browser-sync-webpack-plugin": "^2.3.0",
+		"copy-webpack-plugin": "^8.1.1",
+		"cross-env": "^7.0.3",
+		"css-declaration-sorter": "^6.0.2",
+		"css-mqpacker": "^7.0.0",
+		"glob": "^7.1.6",
+		"imagemin": "^8.0.0",
+		"imagemin-gifsicle": "^7.0.0",
+		"imagemin-keep-folder": "^5.3.2",
+		"imagemin-mozjpeg": "^9.0.0",
+		"imagemin-pngquant": "^9.0.2",
+		"imagemin-svgo": "^9.0.0",
+		"import-glob-loader": "^1.1.0",
+		"laravel-mix": "^6.0.18",
+		"laravel-mix-polyfill": "^3.0.0",
+		"laravel-mix-pug": "^0.3.0",
+		"node-sass-glob-importer": "^5.3.2",
+		"postcss": "^8.1",
+		"postcss-custom-properties": "^11.0.0",
+		"postcss-object-fit-images": "^1.1.2",
+		"pug": "^3.0.2",
+		"rimraf": "^3.0.2",
+		"sass": "^1.32.11",
+		"sass-loader": "^11.0.1",
+		"webpack-livereload-plugin": "1"
+	},
+	"dependencies": {
+		"jquery": "^3.6.0",
+		"picturefill": "^3.0.3"
+	}
+}

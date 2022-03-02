@@ -1,0 +1,516 @@
+/** _mixins.scss **/
+@use "../variables/variables" as v;
+
+/*
+** 画像・動画（iframe）などの縦横比を維持したままレスポンシブ対応するmixin
+** 1. 第1引数にwidthを指定
+** 2. 第2引数にheightを指定
+*/
+@mixin aspect-ratio($width, $height) {
+	position: relative;
+
+	&::before {
+		content: '';
+		float: left;
+		padding-top: ($height / $width) * 100%;
+	}
+
+	&::after {
+		content: '';
+		display: block;
+		clear: both;
+	}
+
+	& > :first-child {
+		height: 100%;
+		left: 0;
+		position: absolute;
+		top: 0;
+		width: 100%;
+	}
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .photo {
+//   // 画像を16:9にトリミングして縦横比を常に保つ
+//   @include aspect-ratio(16, 9);
+
+//   & > .image {
+//     @include object-fit(cover);
+//   }
+// }
+/** CSS / Output **/
+// .photo {
+//   position: relative;
+// }
+
+// .photo::before {
+//   content: '';
+//   float: left;
+//   padding-top: 56.25%;
+// }
+// .photo::after {
+//   content: '';
+//   display: block;
+//   clear: both;
+// }
+// .photo > :first-child {
+//   height: 100%;
+//   left: 0;
+//   position: absolute;
+//   top: 0;
+//   width: 100%;
+// }
+// .photo > .image {
+//   object-fit: cover;
+//   font-family: 'object-fit: cover', sans-serif;
+// }
+
+/*
+** floatを解除するclearfix
+*/
+@mixin clearfix() {
+	&::after {
+		clear: both;
+		content: '';
+		display: block;
+	}
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .list {
+//   @include clearfix();
+//   & > .item {
+//     float: left;
+//   }
+// }
+/** CSS / Output **/
+// .list::after {
+//   clear: both;
+//   content: '';
+//   display: block;
+// }
+// .list > .item {
+//   float: left;
+// }
+
+/*
+** @font-faceを使用して、ダウンロードしたWebフォントを簡単に扱えるようにしたmixin
+** 1. 第1引数にフォント名(font-family)を指定
+** 2. 第2引数にフォントファイルへの相対パスを指定
+** 3. 第3引数に文字の太さ(font-weight)を指定
+** 4. 第4引数に書体(font-style)を指定
+** 5. 第5引数に対応するフォントファイルの拡張子を指定
+*/
+@mixin font-face(
+	$family,
+	$path,
+	$weight: normal,
+	$style: normal,
+	$exts: eot woff2 woff ttf svg
+) {
+	$src: null;
+
+	$extmods: (
+		eot: '?',
+		svg: '#' + str-replace($family, ' ', '_'),
+	);
+
+	$formats: (
+		otf: 'opentype',
+		ttf: 'truetype',
+	);
+
+	@each $ext in $exts {
+		$extmod: if(
+			map-has-key($extmods, $ext),
+			$ext + map-get($extmods, $ext),
+			$ext
+		);
+		$format: if(map-has-key($formats, $ext), map-get($formats, $ext), $ext);
+		$src: append(
+			$src,
+			url(quote($path + '.' + $extmod)) format(quote($format)),
+			comma
+		);
+	}
+
+	@font-face {
+		font-family: quote($family);
+		font-style: $style;
+		font-weight: $weight;
+		src: $src;
+	}
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// @include font-face('Lora', 'fonts/Lora', 400, italic, ttf);
+// @include font-face('Samplinal', 'fonts/Samplinal', bold, normal, eot woff2 woff);
+/** CSS / Output **/
+// @font-face {
+//   font-family: 'Lora';
+//   font-style: italic;
+//   font-weight: 400;
+//   src: url('fonts/Lora.ttf') format('truetype');
+// }
+// @font-face {
+//   font-family: 'Samplinal';
+//   font-style: normal;
+//   font-weight: bold;
+//   src: url('fonts/Samplinal.eot?') format('eot'), url('fonts/Samplinal.woff2') format('woff2'), url('fonts/Samplinal.woff') format('woff');
+// }
+
+/*
+** hoverの指定
+** 対処法は色々とあるが、現状ではhoverメディアクエリを利用する形がベターと考えている
+** 参考）https://developer.mozilla.org/ja/docs/Web/CSS/@media/hover
+** ただし、IEについてはhoverメディアクエリ非対応であるため、引数をtrueとする必要がある。
+** js/utils/ua-ie.jsと連携し、IEでのアクセス時はhtml要素にua-ieクラスを付与することで実現。
+*/
+@mixin hover($ie: false) {
+	&:focus {
+		@content;
+	}
+
+	@media (hover) {
+		&:hover {
+			@content;
+		}
+	}
+
+	@if $ie {
+		@at-root .ua-ie &:hover {
+			@content;
+		}
+	}
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .button--primary {
+//   @include hover() {
+//     opacity: .9;
+//   }
+// }
+// .button--secondary {
+//   @include hover(true) {
+//     opacity: .9;
+//   }
+// }
+/** CSS / Output **/
+// .button--primary:focus {
+//   opacity: .9;
+// }
+// @media (hover) {
+//   .button--primary:hover {
+//     opacity: .9;
+//   }
+// }
+// .button--secondary:focus {
+//   opacity: .9;
+// }
+// @media (hover) {
+//   .button--secondary:hover {
+//     opacity: .9;
+//   }
+// }
+// .ua-ie .button--secondary:hover {
+//   opacity: .9;
+// }
+
+/*
+** 文章の行数を制限して三点リーダを表示するmixin
+** 1. 第1引数に、表示する行数を指定
+** 複数行の制御についてはIE非対応
+*/
+@mixin line-clamp($count: 3) {
+	// 引数が数値以外だったらエラーを返す
+	@if type-of($count) != 'number' {
+		@error 'line-clampの引数は必ず数値で指定してください';
+	}
+
+	@if $count == 1 {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	} @else {
+		display: -webkit-box;
+		-webkit-line-clamp: $count;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .foo {
+//   @include line-clamp(1);
+// }
+// .bar {
+//   @include line-clamp(4);
+// }
+/** CSS / Output **/
+// .foo {
+//   overflow: hidden;
+//   text-overflow: ellipsis;
+//   white-space: nowrap;
+// }
+// .bar {
+//   -webkit-box-orient: vertical;
+//   display: -webkit-box;
+//   -webkit-line-clamp: 4;
+//   overflow: hidden;
+// }
+
+/*
+** object-fitのpolifill用指定を簡略化するためのmixin
+** 1. 第1引数に、 object-fitの値が入ります。（デフォルトはfill）
+** 2. 第2引数に値を入れた場合は、positionを指定出来ます。
+*/
+@mixin object-fit($value: fill, $position: null) {
+	object-fit: $value;
+
+	@if $position {
+		object-position: $position;
+		font-family: 'object-fit: #{$value}; object-position: #{$position}',
+			sans-serif;
+	} @else {
+		font-family: 'object-fit: #{$value}', sans-serif;
+	}
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .photo__image {
+//   &.-image1 {
+//     @include object-fit(cover);
+//   }
+//   &.-image2 {
+//     @include object-fit(contain, top center);
+//   }
+// }
+/** CSS / Output **/
+// .photo__image.-image1 {
+// 	font-family: 'object-fit: cover', sans-serif;
+// 	object-fit: cover;
+// }
+// .photo__image.-image2 {
+// 	font-family: 'object-fit: contain; object-position: top center', sans-serif;
+// 	object-fit: contain;
+// 	object-position: top center;
+// }
+
+/*
+** ブレイクポイントの指定
+** 1. 第1引数に、キー名を指定
+** xs, sm, md, lg, xl, xxl
+**
+** モバイルファーストで書く（min-widthで指定するようにする）
+** 本ブレイクポイントはbootstrap5を参考にしている
+*/
+@mixin responsive($breakpoint) {
+	@if map-has-key(v.$breakpoints, $breakpoint) {
+		@media screen and #{inspect(map-get(v.$breakpoints, $breakpoint))} {
+			@content;
+		}
+	}
+
+	// マップ型で定義されていない値が呼び出された時はエラーを返す
+	@else {
+		@error "指定されたブレークポイントは定義されていません。" + "指定できるブレークポイントは次のとおりです。 -> #{map-keys($breakpoints)}";
+	}
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// body {
+//   font-size: 12px;
+//   @include responsive(md) {
+//     font-size: 14px;
+//   }
+//   @include responsive(xl) {
+//     font-size: 16px;
+//   }
+// }
+/** CSS / Output **/
+// body {
+//   font-size: 12px;
+// }
+// @media screen and (min-width: 768px) {
+//   body {
+//     font-size: 14px;
+//   }
+// }
+// @media screen and (min-width: 1200px) {
+//   body {
+//     font-size: 16px;
+//   }
+// }
+
+/*
+** 三角形の作成
+** 1. 第1引数に方向を指定する
+** 上向き（upward）, 右向き（rightward）, 下向き（downward）, 左向き（leftward）
+** 左上（upper-left）, 右上（upper-right）, 右下（lower-right）, 左下（lower-left）
+** 2. 第2引数に三角形の横幅を指定
+** 3. 第3引数に三角形の縦幅を指定
+** 4. 第4引数に三角形の色を指定、デフォルトは現在の文字色（currentColor）
+**
+** @url https://codepen.io/tak-dcxi/pen/oNzojRw
+*/
+@mixin triangle($direction, $width, $height, $color: currentColor) {
+	// 定義されている方向が指定されている、もしくは方向が指定されていなかったらエラーを返す
+	@if not
+		index(
+			upward
+				rightward
+				downward
+				leftward
+				upper-left
+				upper-right
+				lower-right
+				lower-left,
+			$direction
+		)
+	{
+		@error 'triangle()の方向は"upward","rightward","downward","leftward","upper-left","upper-right","lower-right","lower-left"から指定してください';
+	}
+
+	border-style: solid;
+	height: 0;
+	width: 0;
+
+	@if $direction == upward {
+		border-color: transparent transparent $color transparent;
+		border-width: 0 ($width / 2) $height ($width / 2);
+	}
+
+	@if $direction == rightward {
+		border-color: transparent transparent transparent $color;
+		border-width: ($height / 2) 0 ($height / 2) $width;
+	}
+
+	@if $direction == downward {
+		border-color: $color transparent transparent transparent;
+		border-width: $height ($width / 2) 0 ($width / 2);
+	}
+
+	@if $direction == leftward {
+		border-color: transparent $color transparent transparent;
+		border-width: ($height / 2) $width ($height / 2) 0;
+	}
+
+	@if $direction == upper-left {
+		border-color: $color transparent transparent transparent;
+		border-width: $height $height 0 0;
+	}
+
+	@if $direction == upper-right {
+		border-color: transparent $color transparent transparent;
+		border-width: 0 $height $height 0;
+	}
+
+	@if $direction == lower-right {
+		border-color: transparent transparent $color transparent;
+		border-width: 0 0 $height $height;
+	}
+
+	@if $direction == lower-left {
+		border-color: transparent transparent transparent $color;
+		border-width: $height 0 0 $height;
+	}
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .example {
+//   position: relative;
+//   &::before {
+//     content: '';
+//     display: inline-block;
+//     position: absolute;
+//   }
+//   &[data-direction=upward] {
+//     &::before {
+//       @include triangle(upward, 20px, 15px, #cd5c5c);
+
+//       bottom: 100%;
+//       left: calc(50% - 10px);
+//     }
+//   }
+//   &[data-direction=upper-left] {
+//     &::before {
+//       @include triangle(upper-left, 12px, 12px);
+
+//       left: 6px;
+//       top: 6px;
+//     }
+//   }
+// }
+/** CSS / Output **/
+// .example {
+//   position: relative;
+// }
+// .example::before {
+//   content: '';
+//   display: inline-block;
+//   position: absolute;
+// }
+// .example[data-direction=upward]::before {
+//   border-style: solid;
+//   height: 0;
+//   width: 0;
+//   border-color: transparent transparent #cd5c5c transparent;
+//   border-width: 0 10px 15px 10px;
+//   bottom: 100%;
+//   left: calc(50% - 10px);
+// }
+// .example[data-direction=upper-left]::before {
+//   border-style: solid;
+//   height: 0;
+//   width: 0;
+//   border-color: currentColor transparent transparent transparent;
+//   border-width: 12px 12px 0 0;
+//   left: 6px;
+//   top: 6px;
+// }
+
+/*
+** スクリーンリーダー向けの隠しコンテンツ
+** アクセシビリティ面で、表示はしたくないが、読み上げはさせたい要素に対するmixin
+**
+** @url https://developers.google.com/web/fundamentals/accessibility/semantics-aria/hiding-and-updating-content?hl=ja
+*/
+@mixin visually-hidden() {
+	// a11y-css-resetから引用
+	// https://github.com/mike-engel/a11y-css-reset
+	border: 0 !important;
+	clip: rect(0 0 0 0) !important;
+	clip-path: inset(50%) !important;
+	height: 1px !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	padding: 0 !important;
+	position: absolute !important;
+	white-space: nowrap !important;
+	width: 1px !important;
+}

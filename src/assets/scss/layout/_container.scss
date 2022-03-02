@@ -1,0 +1,15 @@
+@use "sass:map";
+
+@use "../foundation/global" as g;
+@use "../foundation/variables/variables" as v;
+
+#hoge {
+	object-fit: cover;
+	object-position: top;
+	animation: animation-foo 1s g.ease(out-expo) 0.4s both;
+	z-index: map.get(v.$z-index, header);
+
+	@include g.responsive(md) {
+		width: 100%;
+	}
+}

@@ -1,0 +1,6 @@
+# node_modulesは環境によって中身が変わるので無視する
+node_modules
+
+# 出力先フォルダについてはgit管理外とする
+dist
+prod

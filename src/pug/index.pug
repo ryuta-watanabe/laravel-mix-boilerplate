@@ -1,0 +1,37 @@
+extends /extends/_default.pug
+block vars
+  - metas = {}
+  - metas.title = 'title'
+  - metas.description = 'description'
+  - metas.site_name = 'site_name'
+  - metas.site_url = 'url'
+  - metas.author = 'author'
+  - metas.og_image = 'image'
+//- block start_of_head
+block append meta
+  +meta(metas)
+//- block append link
+//- block end_of_head
+//- block start_of_body
+block content
+  h1 Twitter TimeLine Sample
+  blockquote.twitter-tweet
+    p(lang="ja", dir="ltr") 
+      | PCR 検査の検体（唾液）提出してきました
+      br
+      br
+      | 結果は明日19時ごろ判明するそうです
+      br
+      br
+      | 帰ります
+    | &mdash; 元アプリ開発者47歳 (@tome_ura) 
+    a(href="https://twitter.com/tome_ura/status/1392386309369434115?ref_src=twsrc%5Etfw") May 12, 2021
+  script(async, src="https://platform.twitter.com/widgets.js", charset="utf-8")
+  blockquote.twitter-tweet
+    p(lang="ja", dir="ltr") 
+      | 『フィットネス×金融』で新しい経済圏を！仕事に面白さを追求するデザイナー求む
+      a(href="https://twitter.com/hashtag/%E3%83%AA%E3%83%BC%E3%83%89%E3%82%A8%E3%83%83%E3%82%B8%E3%82%B3%E3%83%B3%E3%82%B5%E3%83%AB%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0?src=hash&amp;ref_src=twsrc%5Etfw") #リードエッジコンサルティング
+    | &mdash; Wantedly | ウォンテッドリー (@wantedly)
+    a(href="https://twitter.com/wantedly/status/1381863080523522049?ref_src=twsrc%5Etfw") April 13, 2021
+  script(async, src="https://platform.twitter.com/widgets.js", charset="utf-8")
+//- block append end_of_body

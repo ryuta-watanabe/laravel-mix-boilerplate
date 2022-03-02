@@ -1,0 +1,198 @@
+/** _functions.scss **/
+@use "../variables/variables" as v;
+
+/*
+** 数値から単位を取り除く
+** 第一引数に渡した値から、単位（pxなど）を取り除き、純粋な数値へと変換する。
+** これ自体を利用するというよりは、他のfunctionやmixinとの組み合わせで利用。
+*/
+@function strip-unit($number) {
+	@if type-of($number) == 'number' and not unitless($number) {
+		@return $number / ($number * 0 + 1);
+	}
+
+	@return $number;
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// $value: strip-unit(32px);
+// -> 32
+
+/*
+** pxからvwへの単位変換
+** 1. 第1引数に指定したいピクセル値を指定
+** 2. 第2引数に基準となる画面幅（デザインカンプの横幅）を指定
+**
+** ただし、デスクトップ向けにvwを基本単位として指定するのは危険なので控えるように。
+** - 大型ディスプレイ（ウルトラワイドモニターなど）での表示がデカすぎて見にくくなる
+** - ブラウザのズーム機能が機能しなくなってアクセシビリティ的によろしくない
+*/
+@function vw($px, $base: 375px) {
+	$value: $px;
+
+	// 単位がpx以外の場合は警告を出してそのまま返す
+	@if (unit($px) != 'px') {
+		@warn 'vw()の引数にpx以外の値を指定しても計算できません';
+		@return $value;
+	}
+
+	$value: (strip-unit($px) / strip-unit($base)) * 100vw;
+
+	@return $value;
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .foo {
+//   width: vw(40px);
+// }
+// .bar {
+//   width: vw(40px, 768px);
+// }
+// .baz {
+//   width: vw(50%);
+// }
+/** CSS / Output **/
+// '.foo {
+//   width: 10.66667vw;
+// }
+// .bar {
+//   width: 5.20833vw;
+// }
+// .baz {
+//   width: 50%;
+// }'
+
+/*
+** 3次ベジェ曲線のイージング
+** cubic-bezierを使用して複雑なアニメーションを指定する
+** elastic系とbounce系はcssだけで再現することが出来ないので、anime.jsなどを利用する必要がある。
+**
+** @see foundation/variables/_variables.scss -> $easings
+** @url https://matthewlein.com/tools/ceaser
+*/
+@function ease($easing) {
+	@if map-has-key(v.$easings, $easing) {
+		@return map-get(v.$easings, $easing);
+	}
+
+	// 定義されていないイージングが指定された時は警告を出して初期値のeaseを返す
+	@warn 'イージング"#{$easing}"は定義されていません';
+	@return ease;
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .foo {
+//   animation: animation-foo 1s ease(out-expo) .4s both;
+// }
+// .bar {
+//   animation: animation-bar 1s ease(in-out-circ) .4s both;
+// }
+// .baz {
+//   animation: animation-baz 1s ease(a) .4s both;
+// }
+/** CSS / Output **/
+// .foo {
+//   animation: animation-foo 1s cubic-bezier(.19, 1, .22, 1) .4s both;
+// }
+// .bar {
+//   animation: animation-bar 1s cubic-bezier(.785, .135, .15, .86) .4s both;
+// }
+// .baz {
+//   animation: animation-baz 1s ease .4s both;
+// }
+
+/*
+** pxからremへの変換
+** root要素のfont-sizeを62.5%に丸め込む実装が多いが、影響範囲が大きすぎるため非推奨。
+** 1. 第1引数に指定したいピクセル値を指定
+** 2. 第2引数に基準となるルートのfont-size値（デフォルトでは16px）を指定
+**
+** @see strip-unit()
+*/
+@function rem($px, $base: 16px) {
+	$value: $px;
+
+	// 単位がpx以外の場合は警告を出してそのまま返す
+	@if (unit($px) != 'px') {
+		@warn 'rem()の引数にpx以外の値を指定しても計算できません';
+		@return $value;
+	}
+
+	$value: (strip-unit($px) / strip-unit($base)) * 1rem;
+
+	@return $value;
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .foo {
+//   font-size: rem(36px);
+// }
+// .bar {
+//   font-size: rem(36px, 12px);
+// }
+// .baz {
+//   font-size: rem(1.5em);
+// }
+/** CSS / Output **/
+// .foo {
+//   font-size: 2.25rem;
+// }
+
+// .bar {
+//   font-size: 3rem;
+// }
+
+// .baz {
+//   font-size: 1.5em;
+// }
+
+/*
+** 文字列からワードを検索して置換する
+**
+** 1. 第1引数に検索対象を指定
+** 2. 第2引数に置換したいワードを指定
+** 3. 第3引数に置換後のワードを指定
+*/
+@function str-replace($string, $search, $replace: '') {
+	$index: str-index($string, $search);
+
+	@if $index {
+		@return str-slice($string, 1, $index - 1) + $replace +
+			str-replace(
+				str-slice($string, $index + str-length($search)),
+				$search,
+				$replace
+			);
+	}
+
+	@return $string;
+}
+
+/*
+** ユースケース
+*/
+/** Sass / Usage **/
+// .message {
+//   &::before {
+//     // 疑似要素内で改行を行うために' 'を\Aに置換する
+//     content: str-replace('今年もありがとうございました。 来年もよろしく。', ' ', '\A');
+//     white-space: pre;
+//   }
+// }
+/** CSS / Output **/
+// .message::before {
+// 	content: '今年もありがとうございました。\a来年もよろしく。';
+// 	white-space: pre;
+// }
